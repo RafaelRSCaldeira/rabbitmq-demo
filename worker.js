@@ -1,4 +1,4 @@
-let amqp = require('amqplib/callback_api');
+const amqp = require('amqplib/callback_api');
 
 amqp.connect('amqp://localhost', (err1, connection) => {
 	if (err1) {
@@ -10,12 +10,14 @@ amqp.connect('amqp://localhost', (err1, connection) => {
 			throw err2;
 		}
 
-		let queue = 'task_queue';
+		const queue = 'task_queue';
 
 		// This makes sure the queue is declared before attempting to consume from it
 		channel.assertQueue(queue, {
 			durable: true,
 		});
+
+		channel.prefetch(1);
 
 		channel.consume(
 			queue,
@@ -26,12 +28,11 @@ amqp.connect('amqp://localhost', (err1, connection) => {
 				console.log(' [x] Received %s', msg.content.toString());
 				setTimeout(function () {
 					console.log(' [x] Done');
+					channel.ack(msg);
 				}, secs * 1000);
 			},
 			{
-				// automatic acknowledgment mode,
-				// see /docs/confirms for details
-				noAck: true,
+				noAck: false,
 			}
 		);
 	});
